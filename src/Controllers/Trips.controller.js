@@ -164,6 +164,14 @@ const collaboratehandler = asynchandler(async (req, res) => {
                 message: 'Please send all fields properly',
             })
         }
+        const { trip_id } = req.body
+        if (trip_id) {
+            const collaboration = new Iscollabmodel({
+                following_userid,
+                trip_id,
+            })
+            await collaboration.save()
+        }
 
         let collab = new Collaboration({
             pendingrequest: false,
@@ -208,15 +216,10 @@ const iscollab = asynchandler(async (req, res) => {
         })
 
         if (existingCollaboration) {
-            return res.status(400).json({ message: 'Already collaborated' })
+            return res.status(200).json({ message: 'Already collaborated' })
         }
-
-        const collaboration = new Iscollabmodel({ following_userid, trip_id })
-        await collaboration.save()
-
-        res.status(201).json({
-            message: 'Collaboration created',
-            collaboration,
+        return res.status(200).json({
+            message: 'Collaborate',
         })
     } catch (error) {
         console.log(error)
