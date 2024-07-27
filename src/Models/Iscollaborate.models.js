@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 const iscollabschema = new mongoose.Schema(
     {
-        user_id: {
+        following_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true,
