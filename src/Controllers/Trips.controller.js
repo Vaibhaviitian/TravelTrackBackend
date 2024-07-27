@@ -5,6 +5,7 @@ import User from '../Models/User.models.js'
 import mongoose, { startSession } from 'mongoose'
 import Collaboration from '../Models/Collaboration.js'
 import { BlogModel } from '../Models/Blog.models.js'
+import Iscollabmodel from '../Models/Iscollaborate.models.js'
 
 const creatingnewtrip = asynchandler(async (req, res) => {
     const {
@@ -191,6 +192,38 @@ const collaboratehandler = asynchandler(async (req, res) => {
     }
 })
 
+const iscollab = asynchandler(async (req, res) => {
+    try {
+        const { following_userid, trip_id } = req.body
+        if (!trip_id || !following_userid) {
+            return res.status(400).json({
+                status: 'false',
+                message: 'Please send all fields properly',
+            })
+        }
+
+        const existingCollaboration = await Iscollabmodel.findOne({
+            following_userid,
+            trip_id,
+        })
+
+        if (existingCollaboration) {
+            return res.status(400).json({ message: 'Already collaborated' })
+        }
+
+        const collaboration = new Iscollabmodel({ following_userid, trip_id })
+        await collaboration.save()
+
+        res.status(201).json({
+            message: 'Collaboration created',
+            collaboration,
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Server error', error })
+    }
+})
+
 const notificationhandler = asynchandler(async (req, res) => {
     const { requester_id } = req.params
     if (!requester_id) {
@@ -359,10 +392,12 @@ const showfollowers = asynchandler(async (req, res) => {
                 message: 'follower data not found',
             })
         }
-    
-       return res.status(200).json(
-            new ApiResponse(200, followerdocs, 'Data getting successfully')
-        )
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(200, followerdocs, 'Data getting successfully')
+            )
     } catch (error) {
         console.log(error)
         return res.status(404).json({
@@ -383,7 +418,7 @@ const showfollowing = asynchandler(async (req, res) => {
         }
         const followingdocs = await Collaboration.find({
             following_userid: id,
-            pendingrequest: true||false,
+            pendingrequest: true || false,
         }).populate('follower_userid')
         if (!followingdocs) {
             return res.status(404).json({
@@ -391,10 +426,12 @@ const showfollowing = asynchandler(async (req, res) => {
                 message: 'follower data not found',
             })
         }
-    
-       return res.status(200).json(
-            new ApiResponse(200, followingdocs, 'Data getting successfully')
-        )
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(200, followingdocs, 'Data getting successfully')
+            )
     } catch (error) {
         console.log(error)
         return res.status(404).json({
@@ -415,5 +452,6 @@ export {
     deletecollabrequest,
     dashboardinfo,
     showfollowers,
-    showfollowing
+    showfollowing,
+    iscollab
 }

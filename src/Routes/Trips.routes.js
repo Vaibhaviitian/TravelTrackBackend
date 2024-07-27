@@ -6,6 +6,7 @@ import {
     dashboardinfo,
     deletecollabrequest,
     deletetrips,
+    iscollab,
     notificationhandler,
     ratinghandler,
     showalltrips,
@@ -22,6 +23,7 @@ Triprouter.route('/deletingtripbyid/:id').delete(deletetrips)
 Triprouter.route('/usertripsbyid/:id').get(usertrips)
 Triprouter.route('/ratingsupdateandsubmission').post(ratinghandler)
 Triprouter.route('/createcollaborationrequest').post(collaboratehandler)
+Triprouter.route('/iscollab').post(iscollab);
 Triprouter.route('/gettingnotificationsbyid/:requester_id').get(notificationhandler)
 Triprouter.route('/requesthandling').post(confirmpendingrequest);
 Triprouter.route('/deletecollabrequest').post(deletecollabrequest);
