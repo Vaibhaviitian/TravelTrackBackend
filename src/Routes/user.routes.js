@@ -8,6 +8,8 @@ import {
     editFullname,
     feeedback,
     totaluser,
+    generateandsetOTP,
+    checkingotp,
 } from '../Controllers/usernew.controller.js'
 import upload from '../Middlewares/multer.js'
 import { verification } from '../Middlewares/authorization.mw.js'
@@ -33,6 +35,8 @@ router.route('/editedTo/email').post(editemail)
 router.route('/editedTo/fullName').post(editFullname)
 router.route('/sending-feedback').post(feeedback)
 router.route('/getting-totaluser').get(totaluser)
+router.route('/generate-otp').post(generateandsetOTP);
+router.route('/cheking-otp').post(checkingotp);
 
 router.route('/login').post(loginuser)
 console.log('Done setting up routes')

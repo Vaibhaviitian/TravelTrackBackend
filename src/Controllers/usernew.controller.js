@@ -3,6 +3,9 @@ import User from '../Models/User.models.js'
 import ApiError from '../Utils/ApiError.js'
 import ApiResponse from '../Utils/ApiResonse.js'
 import uploadOnCloudinary from '../Utils/fileUpload.cloudinary.js'
+import otpgenerator from 'otp-generator'
+import twilio from 'twilio'
+import OTPmodel from '../Models/Otp.model.js'
 
 const options = {
     httpOnly: true,
@@ -331,6 +334,99 @@ const totaluser = asynchandler(async (req, res) => {
     }
 })
 
+const generateandsetOTP = asynchandler(async (req, res) => {
+    try {
+        const { phonenumber } = req.body;
+        const twilio_bhai = new twilio(
+            process.env.Account_SID,
+            process.env.Auth_Token
+        );
+
+        const otp = otpgenerator.generate(6);
+        const stringWithoutSpaces = phonenumber.replace(/\s+/g, '');
+        if (stringWithoutSpaces.length !== 13) {
+            return res.status(400).json({
+                message: 'Give valid phone number',
+                success: 'False',
+            });
+        }
+        await OTPmodel.findOneAndUpdate(
+            { phonenumber: stringWithoutSpaces },
+            { otp, otpexpiry: new Date() },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
+      await twilio_bhai.messages.create({
+        body:`Your OTP from TravelTrack is ${otp}. Verify your account to become an agent. Don't share your credentials.`,
+        to: phonenumber,
+        from:process.env.My_Twilio_phone_number
+      })
+
+        res.status(200).json(
+            new ApiResponse(200, `OTP sent successfully to your ${phonenumber}`, 'OTP sent')
+        );
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: `${error}`,
+            success: 'False',
+        });
+    }
+});
+
+const checkingotp = asynchandler(async (req, res) => {
+    try {
+        const { phonenumber, otp, id } = req.body;
+
+        if (!otp || !id) {
+            return res.status(400).json({
+                message: 'Please provide both otp and id.',
+            });
+        }
+
+        const otpdoc = await OTPmodel.findOne({ phonenumber });
+
+        if (!otpdoc) {
+            return res.status(400).json({
+                message: 'Register your mobile again',
+            });
+        }
+
+        if (otpdoc.otp !== otp) {
+            return res.status(400).json({
+                message: 'Invalid OTP.',
+                ans:"false"
+            });
+        }
+
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'User not found.',
+                ans:"false"
+            });
+        }
+
+        user.isverified = true;
+        await user.save();
+
+        res.status(200).json({
+            message: 'User verified successfully.',
+            ans:"true"
+        });
+    } catch (error) {
+        console.error("Error in checking OTP:", error);
+        return res.status(400).json({
+            message: `Having error in checking the OTP: ${error.message}`,
+            ans:"false"
+        });
+    }
+});
+
+
+
+
 export {
     registeruser,
     loginuser,
@@ -340,4 +436,6 @@ export {
     editFullname,
     feeedback,
     totaluser,
+    generateandsetOTP,
+    checkingotp
 }

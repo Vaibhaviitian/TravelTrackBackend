@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema(
                 ref: 'Trip',
             },
         ],
+        isverified:{
+            type:Boolean,
+            default:false
+        }
     },
     {
         timestamps: true,
