@@ -336,96 +336,127 @@ const totaluser = asynchandler(async (req, res) => {
 
 const generateandsetOTP = asynchandler(async (req, res) => {
     try {
-        const { phonenumber } = req.body;
+        const { phonenumber } = req.body
         const twilio_bhai = new twilio(
             process.env.Account_SID,
             process.env.Auth_Token
-        );
+        )
 
-        const otp = otpgenerator.generate(6);
-        const stringWithoutSpaces = phonenumber.replace(/\s+/g, '');
+        const otp = otpgenerator.generate(6)
+        const stringWithoutSpaces = phonenumber.replace(/\s+/g, '')
         if (stringWithoutSpaces.length !== 13) {
             return res.status(400).json({
                 message: 'Give valid phone number',
                 success: 'False',
-            });
+            })
         }
         await OTPmodel.findOneAndUpdate(
             { phonenumber: stringWithoutSpaces },
             { otp, otpexpiry: new Date() },
             { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
+        )
 
-      await twilio_bhai.messages.create({
-        body:`Your OTP from TravelTrack is ${otp}. Verify your account to become an agent. Don't share your credentials.`,
-        to: phonenumber,
-        from:process.env.My_Twilio_phone_number
-      })
+        await twilio_bhai.messages.create({
+            body: `Your OTP from TravelTrack is ${otp}. Verify your account to become an agent. Don't share your credentials.`,
+            to: phonenumber,
+            from: process.env.My_Twilio_phone_number,
+        })
 
         res.status(200).json(
-            new ApiResponse(200, `OTP sent successfully to your ${phonenumber}`, 'OTP sent')
-        );
+            new ApiResponse(
+                200,
+                `OTP sent successfully to your ${phonenumber}`,
+                'OTP sent'
+            )
+        )
     } catch (error) {
-        console.log(error);
+        console.log(error)
         return res.status(500).json({
             message: `${error}`,
             success: 'False',
-        });
+        })
     }
-});
+})
 
 const checkingotp = asynchandler(async (req, res) => {
     try {
-        const { phonenumber, otp, id } = req.body;
+        const { phonenumber, otp, id } = req.body
 
         if (!otp || !id) {
             return res.status(400).json({
                 message: 'Please provide both otp and id.',
-            });
+            })
         }
 
-        const otpdoc = await OTPmodel.findOne({ phonenumber });
+        const otpdoc = await OTPmodel.findOne({ phonenumber })
 
         if (!otpdoc) {
             return res.status(400).json({
                 message: 'Register your mobile again',
-            });
+            })
         }
 
         if (otpdoc.otp !== otp) {
             return res.status(400).json({
                 message: 'Invalid OTP.',
-                ans:"false"
-            });
+                ans: 'false',
+            })
         }
 
-        const user = await User.findById(id);
+        const user = await User.findById(id)
 
         if (!user) {
             return res.status(404).json({
                 message: 'User not found.',
-                ans:"false"
-            });
+                ans: 'false',
+            })
         }
 
-        user.isverified = true;
-        await user.save();
+        user.isverified = true
+        await user.save()
 
         res.status(200).json({
             message: 'User verified successfully.',
-            ans:"true"
-        });
+            ans: 'true',
+        })
     } catch (error) {
-        console.error("Error in checking OTP:", error);
+        console.error('Error in checking OTP:', error)
         return res.status(400).json({
             message: `Having error in checking the OTP: ${error.message}`,
-            ans:"false"
+            ans: 'false',
+        })
+    }
+})
+
+const isagent = asynchandler(async (req, res) => {
+    const { id } = req.body;
+
+    if (!id) {
+        return res.status(400).json({
+            message: 'Please provide an id.',
         });
     }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+        return res.status(404).json({
+            message: 'User not found.',
+        });
+    }
+
+    const isverified = user.isverified;
+
+    if (!isverified) {
+        return res.status(200).json(
+            new ApiResponse(200, false, 'User is not verified.')
+        );
+    }
+
+    res.status(200).json(
+        new ApiResponse(200, isverified, 'User is verified.')
+    );
 });
-
-
-
 
 export {
     registeruser,
@@ -437,5 +468,6 @@ export {
     feeedback,
     totaluser,
     generateandsetOTP,
-    checkingotp
+    checkingotp,
+    isagent
 }
