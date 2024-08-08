@@ -342,10 +342,7 @@ const generateandsetOTP = asynchandler(async (req, res) => {
             process.env.Auth_Token
         )
 
-        const otp = otpgenerator.generate({
-            length: 6,      
-            type: 'numeric'  
-          });
+        const otp = otpgenerator.generate(6, { upperCaseAlphabets: false,lowerCaseAlphabets: false , specialChars: false });
         const stringWithoutSpaces = phonenumber.replace(/\s+/g, '')
         if (stringWithoutSpaces.length !== 13) {
             return res.status(400).json({
