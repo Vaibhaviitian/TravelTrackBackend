@@ -10,6 +10,7 @@
   "author": "Vaibhav Aryan",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.17.1",
     "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.2.0",

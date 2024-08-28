@@ -9,6 +9,7 @@ import {
     iscollab,
     notificationhandler,
     ratinghandler,
+    recommendationoftrips,
     showalltrips,
     showfollowers,
     showfollowing,
@@ -30,5 +31,6 @@ Triprouter.route('/deletecollabrequest').post(deletecollabrequest);
 Triprouter.route('/gettingdashboardinfo').post(dashboardinfo)
 Triprouter.route('/dashboard-details/collaborators').post(showfollowers);
 Triprouter.route('/dashboard-details/followings').post(showfollowing);
+Triprouter.route('/recommendation-of-Trips').get(recommendationoftrips);
 
 export default Triprouter

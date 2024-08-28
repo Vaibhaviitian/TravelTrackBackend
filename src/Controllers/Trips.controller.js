@@ -6,6 +6,7 @@ import mongoose, { startSession } from 'mongoose'
 import Collaboration from '../Models/Collaboration.js'
 import { BlogModel } from '../Models/Blog.models.js'
 import Iscollabmodel from '../Models/Iscollaborate.models.js'
+import {GoogleGenerativeAI} from '@google/generative-ai'
 
 const creatingnewtrip = asynchandler(async (req, res) => {
     const {
@@ -443,6 +444,62 @@ const showfollowing = asynchandler(async (req, res) => {
         })
     }
 })
+
+const recommendationoftrips = asynchandler(async (req, res) => {
+    try {
+        const genAI = new GoogleGenerativeAI(process.env.API_KEY_OF_GOOGLE)
+        let model = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            generationConfig: { responseMimeType: 'application/json' },
+            systemInstruction:
+                'You are an AI generating realistic trip data using a Google API. Your goal is to create detailed and plausible trip itineraries including trip ID, start and end dates, trip name, destination, activities, accommodation, budget, transportation, and additional notes. Ensure the data is varied and aligns with typical travel scenarios.',
+        })
+
+        let prompt = `
+           List 20 popular trip itineraries  using this JSON schema:
+            {
+  "type": "object",
+  "properties": {
+    "trip_id": { "type": "string" },
+    "startDate": { "type": "string", "format": "date" },
+    "endDate": { "type": "string", "format": "date" },
+    "tripName": { "type": "string" },
+    "destination": { "type": "string" },
+    "activities": { "type": "array", "items": { "type": "string" } },
+    "accommodation": { "type": "string" },
+    "budget": { "type": "number" },
+    "transportation": { "type": "string" },
+    "notes": { "type": "string" }
+  },
+  "required": ["trip_id", "startDate", "endDate", "tripName", "destination"]
+}
+`
+        let result = await model.generateContent(prompt)
+        console.log(result.response.text())
+        // return res.send(result.response.text())
+        if (result && result.response && result.response.text) {
+            const trips = JSON.parse(result.response.text())
+
+            // Validate the structure of the response
+            if (Array.isArray(trips)) {
+                return res.status(200).json({ data: trips })
+            } else {
+                return res.status(500).json({
+                    message: 'Unexpected response format from AI.',
+                })
+            }
+        } else {
+            return res.status(500).json({
+                message: 'Failed to retrieve data from AI.',
+            })
+        }
+    } catch (error) {
+        console.error(`Error fetching trip data: ${error.message}`)
+        return res.status(500).json({
+            message: `Error fetching trip data: ${error.message}`,
+        })
+    }
+})
 export {
     creatingnewtrip,
     showalltrips,
@@ -456,5 +513,6 @@ export {
     dashboardinfo,
     showfollowers,
     showfollowing,
-    iscollab
+    iscollab,
+    recommendationoftrips
 }
