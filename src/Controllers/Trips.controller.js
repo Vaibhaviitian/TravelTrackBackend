@@ -447,7 +447,7 @@ const showfollowing = asynchandler(async (req, res) => {
 
 const recommendationoftrips = asynchandler(async (req, res) => {
     try {
-        const genAI = new GoogleGenerativeAI(AIzaSyCMl-wfMx1kTrqbDTcu0IE87fRO6oKa4VA)
+        const genAI = new GoogleGenerativeAI('AIzaSyCMl-wfMx1kTrqbDTcu0IE87fRO6oKa4VA');
         let model = genAI.getGenerativeModel({
             model: 'gemini-1.5-flash',
             generationConfig: { responseMimeType: 'application/json' },
